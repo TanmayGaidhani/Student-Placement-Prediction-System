@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Placement Prediction</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <h1>Smart Student Placement Prediction System</h1>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+
+        <div class="card">
+
+            <h2>Placement Prediction</h2>
+            <p class="subtitle">
+                Enter student details to predict placement status
+            </p>
+
+            <form action="/predict" method="POST">
+
+                <div class="input-group">
+                    <label>CGPA</label>
+                    <input 
+                        type="number"
+                        step="0.1"
+                        name="cgpa"
+                        placeholder="Enter CGPA"
+                        required
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label>IQ</label>
+                    <input 
+                        type="number"
+                        name="iq"
+                        placeholder="Enter IQ"
+                        required
+                    >
+                </div>
+
+                <button type="submit">
+                    Predict Placement
+                </button>
+
+            </form>
+
+            {% if result %}
+
+            <div class="result-box">
+                <h3>{{ result }}</h3>
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+</html>
