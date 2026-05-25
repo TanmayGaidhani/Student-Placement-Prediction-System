@@ -3,67 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Placement Prediction</title>
-
+    <title>Student Placement Prediction System</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
-    <!-- Navbar -->
-    <nav class="navbar">
-        <h1>Smart Student Placement Prediction System</h1>
-    </nav>
+<nav class="navbar">
+    <div class="nav-inner">
+        <div>
+            <h1>Student Placement Prediction System</h1>
+            <p class="nav-sub">Logistic Regression &nbsp;&bull;&nbsp; {{ metrics.dataset.total_rows | int }} Real Records &nbsp;&bull;&nbsp; {{ metrics.dataset.feature_count }} Features &nbsp;&bull;&nbsp; No Synthetic Data</p>
+        </div>
+        <div class="nav-badge-group">
+            <span class="badge-pill green">CV: {{ metrics.primary_model.cv_accuracy }}%</span>
+            <span class="badge-pill blue">{{ metrics.dataset.total_rows }} Rows</span>
+            <span class="badge-pill purple">LR Primary</span>
+        </div>
+    </div>
+</nav>
 
-    <!-- Main Container -->
-    <div class="container">
+<div class="page-wrapper">
 
-        <div class="card">
-
-            <h2>Placement Prediction</h2>
-            <p class="subtitle">
-                Enter student details to predict placement status
-            </p>
+    <!-- ═══════ LEFT: PREDICTION FORM ═══════ -->
+    <div class="left-col">
+        <div class="card pred-card">
+            <div class="card-header">
+                <div class="model-tag">Logistic Regression</div>
+                <h2>Predict Placement</h2>
+                <p class="subtitle">Campus Recruitment Profile</p>
+            </div>
 
             <form action="/predict" method="POST">
 
-                <div class="input-group">
-                    <label>CGPA</label>
-                    <input 
-                        type="number"
-                        step="0.1"
-                        name="cgpa"
-                        placeholder="Enter CGPA"
-                        required
-                    >
+                <!-- Academic -->
+                <div class="form-section-label">Academic Scores</div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>CGPA <span class="hint">out of 10</span></label>
+                        <input type="number" name="cgpa" step="0.01" min="4" max="10" placeholder="e.g. 8.2" required>
+                    </div>
+                    <div class="input-group">
+                        <label>SSC Marks <span class="hint">10th %</span></label>
+                        <input type="number" name="ssc_marks" step="0.1" min="40" max="100" placeholder="e.g. 78.5" required>
+                    </div>
+                    <div class="input-group">
+                        <label>HSC Marks <span class="hint">12th %</span></label>
+                        <input type="number" name="hsc_marks" step="0.1" min="40" max="100" placeholder="e.g. 82.0" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Aptitude Score <span class="hint">0–100</span></label>
+                        <input type="number" name="aptitude_score" step="0.1" min="0" max="100" placeholder="e.g. 72" required>
+                    </div>
                 </div>
 
-                <div class="input-group">
-                    <label>IQ</label>
-                    <input 
-                        type="number"
-                        name="iq"
-                        placeholder="Enter IQ"
-                        required
-                    >
+                <!-- Skills -->
+                <div class="form-section-label">Skills</div>
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>Soft Skills Rating <span class="hint">1–5</span></label>
+                        <input type="number" name="soft_skills" step="0.1" min="1" max="5" placeholder="e.g. 3.5" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Internships</label>
+                        <select name="internships" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5+</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Projects</label>
+                        <select name="projects" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5+</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Workshops / Certifications</label>
+                        <select name="workshops" required>
+                            <option value="" disabled selected>Select</option>
+                            <option value="0">0</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5+</option>
+                        </select>
+                    </div>
                 </div>
 
-                <button type="submit">
-                    Predict Placement
-                </button>
+                <!-- Background -->
+                <div class="form-section-label">Background</div>
+                <div class="form-row-2">
+                    <div class="input-group">
+                        <label>Extracurricular Activities</label>
+                        <div class="radio-group">
+                            <label class="radio-opt"><input type="radio" name="extracurricular" value="Yes" required><span>Yes</span></label>
+                            <label class="radio-opt"><input type="radio" name="extracurricular" value="No"><span>No</span></label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>Placement Training</label>
+                        <div class="radio-group">
+                            <label class="radio-opt"><input type="radio" name="placement_training" value="Yes" required><span>Yes</span></label>
+                            <label class="radio-opt"><input type="radio" name="placement_training" value="No"><span>No</span></label>
+                        </div>
+                    </div>
+                </div>
 
+                <button type="submit">Predict Placement</button>
             </form>
 
             {% if result %}
-
-            <div class="result-box">
-                <h3>{{ result }}</h3>
+            <div class="result-box {{ result_type }}">
+                <div class="result-top">
+                    <div class="result-icon">{{ '✓' if result_type == 'placed' else ('✗' if result_type == 'not_placed' else '!') }}</div>
+                    <div>
+                        <h3>{{ result }}</h3>
+                        <p class="result-sub">Logistic Regression &nbsp;&bull;&nbsp; {{ metrics.primary_model.cv_accuracy }}% CV Accuracy</p>
+                    </div>
+                </div>
+                {% if placed_prob is defined and result_type != 'error' %}
+                <div class="prob-section">
+                    <div class="prob-row">
+                        <span class="red-txt">Not Placed &nbsp;{{ not_placed_prob }}%</span>
+                        <span class="green-txt">{{ placed_prob }}% &nbsp;Placed</span>
+                    </div>
+                    <div class="prob-track">
+                        <div class="prob-bar" style="width:{{ placed_prob }}%"></div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
-
             {% endif %}
-
         </div>
 
+        <!-- Dataset Stats -->
+        <div class="card info-card">
+            <h3>Dataset Overview</h3>
+            <div class="info-grid">
+                <div class="info-item"><span class="info-val purple">{{ metrics.dataset.total_rows }}</span><span class="info-lbl">Total Rows</span></div>
+                <div class="info-item"><span class="info-val blue">{{ metrics.dataset.feature_count }}</span><span class="info-lbl">Features</span></div>
+                <div class="info-item"><span class="info-val green">{{ metrics.dataset.placed }}</span><span class="info-lbl">Placed</span></div>
+                <div class="info-item"><span class="info-val red">{{ metrics.dataset.not_placed }}</span><span class="info-lbl">Not Placed</span></div>
+            </div>
+            <div class="new-feat-row">
+                <span class="nf-label">Source:</span>
+                <span class="nf-tag">placement.csv</span>
+                <span class="nf-tag">Real Labels</span>
+                <span class="nf-tag">No Synthetic</span>
+            </div>
+        </div>
     </div>
 
+    <!-- ═══════ RIGHT: REPORT ═══════ -->
+    <div class="right-col">
+
+        <!-- Primary Model Hero -->
+        <div class="card report-hero">
+            <div class="rh-left">
+                <div class="rh-tag">PRIMARY MODEL</div>
+                <h2 class="rh-name">Logistic Regression</h2>
+                <p class="rh-params">{{ metrics.primary_model.best_params }}</p>
+                <div class="rh-metrics">
+                    <div class="rh-m best">
+                        <span class="rh-v green">{{ metrics.primary_model.cv_accuracy }}%</span>
+                        <span class="rh-l">5-Fold CV <span class="best-tag">Most Reliable</span></span>
+                    </div>
+                    <div class="rh-m"><span class="rh-v">{{ metrics.primary_model.accuracy }}%</span><span class="rh-l">Test Set</span></div>
+                    <div class="rh-m"><span class="rh-v">{{ metrics.primary_model.f1 }}%</span><span class="rh-l">F1 Score</span></div>
+                    <div class="rh-m"><span class="rh-v">{{ metrics.primary_model.precision }}%</span><span class="rh-l">Precision</span></div>
+                    <div class="rh-m"><span class="rh-v">{{ metrics.primary_model.recall }}%</span><span class="rh-l">Recall</span></div>
+                    <div class="rh-m"><span class="rh-v">{{ metrics.dataset.total_rows }}</span><span class="rh-l">Training Rows</span></div>
+                </div>
+            </div>
+            <div class="rh-right">
+                <div class="cm-title">Confusion Matrix</div>
+                {% set cm = metrics.primary_model.confusion_matrix %}
+                <table class="cm-table">
+                    <thead><tr><th></th><th>Pred: Not Placed</th><th>Pred: Placed</th></tr></thead>
+                    <tbody>
+                        <tr><td class="cm-lbl">Actual: Not Placed</td><td class="cm-good">{{ cm.tn }}</td><td class="cm-bad">{{ cm.fp }}</td></tr>
+                        <tr><td class="cm-lbl">Actual: Placed</td><td class="cm-bad">{{ cm.fn }}</td><td class="cm-good">{{ cm.tp }}</td></tr>
+                    </tbody>
+                </table>
+                <div class="cm-legend"><span class="green-txt">&#9632; Correct</span><span class="red-txt">&#9632; Incorrect</span></div>
+            </div>
+        </div>
+
+        <!-- Algorithm Comparison -->
+        <div class="card">
+            <h3 class="section-title">Algorithm Comparison Report</h3>
+            <p class="section-note">All 5 models tuned with GridSearchCV (5-Fold Stratified CV) on 10,000 real records.</p>
+            <div class="compare-wrap">
+                <table class="compare-table">
+                    <thead><tr>
+                        <th>#</th><th>Algorithm</th>
+                        <th>5-Fold CV</th><th>Test Set</th><th>F1</th><th>Precision</th><th>Recall</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr class="primary-row">
+                            <td><span class="rank-badge">1</span></td>
+                            <td><strong>Logistic Regression</strong> <span class="primary-tag">Primary</span></td>
+                            <td class="hi green-txt">{{ metrics.primary_model.cv_accuracy }}%</td>
+                            <td>{{ metrics.primary_model.accuracy }}%</td>
+                            <td>{{ metrics.primary_model.f1 }}%</td>
+                            <td>{{ metrics.primary_model.precision }}%</td>
+                            <td>{{ metrics.primary_model.recall }}%</td>
+                        </tr>
+                        {% set ns = namespace(rank=2) %}
+                        {% for row in metrics.comparison %}
+                        <tr>
+                            <td><span class="rank-badge other">{{ ns.rank }}</span></td>
+                            <td>{{ row.model }}</td>
+                            <td>{{ row.cv_accuracy }}%</td>
+                            <td>{{ row.accuracy }}%</td>
+                            <td>{{ row.f1 }}%</td>
+                            <td>{{ row.precision }}%</td>
+                            <td>{{ row.recall }}%</td>
+                        </tr>
+                        {% set ns.rank = ns.rank + 1 %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Train % Sweep -->
+        <div class="card">
+            <h3 class="section-title">Training Data % Impact — Logistic Regression</h3>
+            <p class="section-note">Effect of training size on test accuracy ({{ metrics.dataset.total_rows }} total rows).</p>
+            <div class="sweep-grid">
+                {% for row in metrics.primary_model.train_sweep %}
+                <div class="sweep-item {{ 'sweep-best' if row.train_pct == 80 else '' }}">
+                    <div class="sweep-pct">{{ row.train_pct }}%</div>
+                    <div class="sweep-bar-wrap"><div class="sweep-bar" style="width:{{ row.accuracy }}%"></div></div>
+                    <div class="sweep-acc">{{ row.accuracy }}%</div>
+                    <div class="sweep-meta">{{ row.train_size }} train / {{ row.test_size }} test</div>
+                    {% if row.train_pct == 80 %}<div class="sweep-used-tag">Used</div>{% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Analysis Notes -->
+        <div class="card">
+            <h3 class="section-title">Analysis &amp; Key Findings</h3>
+            <ul class="notes-list">
+                {% for note in metrics.notes %}
+                <li>{{ note }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -1,41 +1,67 @@
 from flask import Flask, render_template, request
-import pickle
-import numpy as np
+import pickle, json, numpy as np
 
-# Create Flask App
 app = Flask(__name__)
 
-# Load Trained Model
-model = pickle.load(open("model.pkl", "rb"))
+model    = pickle.load(open("model.pkl",    "rb"))
+scaler   = pickle.load(open("scaler.pkl",   "rb"))
+encoders = pickle.load(open("encoders.pkl", "rb"))
+with open("metrics.json",  "r") as f: metrics  = json.load(f)
+with open("features.json", "r") as f: FEATURES = json.load(f)
 
-# Home Page
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('index.html', metrics=metrics)
 
-# Prediction Route
 @app.route('/predict', methods=['POST'])
 def predict():
+    try:
+        raw = {
+            'cgpa':               float(request.form['cgpa']),
+            'internships':        int(request.form['internships']),
+            'projects':           int(request.form['projects']),
+            'workshops':          int(request.form['workshops']),
+            'aptitude_score':     float(request.form['aptitude_score']),
+            'soft_skills':        float(request.form['soft_skills']),
+            'extracurricular':    request.form['extracurricular'],
+            'placement_training': request.form['placement_training'],
+            'ssc_marks':          float(request.form['ssc_marks']),
+            'hsc_marks':          float(request.form['hsc_marks']),
+        }
 
-    # Get Data From Form
-    cgpa = float(request.form['cgpa'])
-    iq = float(request.form['iq'])
+        encoded = {}
+        for key, val in raw.items():
+            if key in encoders:
+                try:
+                    encoded[key] = float(encoders[key].transform([val])[0])
+                except ValueError:
+                    encoded[key] = 0.0
+            else:
+                encoded[key] = float(val)
 
-    # Convert into array
-    input_data = np.array([[cgpa, iq]])
+        arr    = np.array([[encoded[f] for f in FEATURES]])
+        scaled = scaler.transform(arr)
 
-    # Prediction
-    prediction = model.predict(input_data)
+        pred    = model.predict(scaled)[0]
+        label   = encoders['status'].inverse_transform([pred])[0]
+        prob    = model.predict_proba(scaled)[0]
+        classes = encoders['status'].classes_
+        pm      = {c: round(float(p)*100, 1) for c, p in zip(classes, prob)}
 
-    # Result
-    if prediction[0] == 1:
-        result = "Student Will Get Placed ✅"
-    else:
-        result = "Student Will NOT Get Placed ❌"
+        placed_prob     = pm.get('Placed', 0)
+        not_placed_prob = pm.get('Not Placed', 0)
+        result_type     = 'placed' if label == 'Placed' else 'not_placed'
 
-    # Send Result to HTML
-    return render_template('index.html', result=result)
+        return render_template('index.html', metrics=metrics,
+            result='Student Will Get Placed' if result_type == 'placed' else 'Student Will NOT Get Placed',
+            result_type=result_type,
+            placed_prob=placed_prob,
+            not_placed_prob=not_placed_prob)
 
-# Run App
-if __name__ == "__main__":
+    except Exception as e:
+        import traceback; traceback.print_exc()
+        return render_template('index.html', metrics=metrics,
+            result=f'Error: {e}', result_type='error')
+
+if __name__ == '__main__':
     app.run(debug=True)
